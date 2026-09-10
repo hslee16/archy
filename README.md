@@ -13,42 +13,57 @@
 > archy turns a Python import graph into something an agent can *use*: blast radius before an edit, the tests that edit affects, the modules most at risk. And it *fails* when the graph disagrees with the layers you declared. Same graph either way, as a CLI and an MCP server, every session and in CI.
 
 > [!IMPORTANT]
-> **Status, 2026-09-02: active again, on one question.**
+> **Status, 2026-09-10: active, and pointed at the loop rather than the surface area.**
 >
-> archy is back in development after five weeks in maintenance. The focus is
-> narrow and it is not the original one: **coding agents running a small model
-> on local hardware.** A DGX Spark carries 128 GB of unified memory, which puts
-> roughly 70B to 200B models within local reach at 4-bit, but their usable
-> context stays far below a frontier API model's and degrades faster across it.
-> Under that constraint a structural answer to "what does this change reach,
-> and what breaks if it is wrong" may substitute for context the model cannot
-> hold at all.
+> **What archy does.** One graph, two front ends. It parses a Python project's
+> imports and calls once, keeps the parse cached, and answers the questions a
+> file tree cannot: what does this change reach, which tests does that affect,
+> where are the cycles, and does the graph still agree with the layers you
+> declared. It runs as a CLI in CI and as an MCP server inside an agent session,
+> off the same graph either way, and it *fails* when the declared architecture
+> and the real one disagree.
 >
-> **This is a bet, not a finding, and the difference matters here.** Everything
-> in the section below still stands: I measured this tool's premise four times
-> and the problem it prevents is rare, the one real effect was capped at 12% by
-> how seldom the mistake happens, and two token-reduction propositions came back
-> null. **Every one of those studies ran against an agent with a large context
-> window and strong long-range code reasoning** - the population where a
-> structural index has the least to add, because the model can often just read
-> the code. A small local model is a different population. That is the one
-> reading of the prior nulls that does not require reinterpreting them, and it
-> might still be wrong.
+> **Where it is going: deeper into that loop, not wider.** The local-model
+> question that reopened this project on 2026-09-02 is **closed, as six
+> interventions, none positive**, two of them measured as costing MORE than
+> their control. The write-up is Study 8 in
+> [`docs/WHAT_DIDNT_WORK.md`](docs/WHAT_DIDNT_WORK.md), and it is the fifth
+> pre-registered null published here. The feature that line produced,
+> `conventions --emit-headers`, is kept, because it is derived rather than
+> hand-authored, cheap, and `--check` stops it rotting. Only the claim attached
+> to it is retired.
 >
-> So the discipline does not relax because the project is active again. The
-> thresholds are pre-registered in
-> [#408](https://github.com/hslee16/archy/issues/408), **no treatment arm has
-> been scored**, and any result, including another null, gets published in
-> [`docs/WHAT_DIDNT_WORK.md`](docs/WHAT_DIDNT_WORK.md) like the other four.
-> Nothing archy ships today claims a local-model benefit; `archy brief` (v0.46)
-> shipped explicitly on judgment ahead of that measurement rather than on one.
+> **What those six nulls did establish is where the failure lives: delivery and
+> retrieval, not capability.** Across 132 agent transcripts on a pinned tree,
+> `read` fired in 132 of 132 runs with a median of 9.5 calls before the first
+> edit; archy fired in 84 of 132, with a median of **zero** calls before it.
+> Every archy surface is pull. The model reaches for it after it has already
+> decided, or not at all. Two payloads pushed through the one channel archy
+> owns, the file itself, both came out more expensive than their control, which
+> is evidence about the channel and not the content.
+>
+> So the working design rule is: **put the answer in the default output of a
+> command that is already being run**, rather than adding a surface that has to
+> be discovered first. The live threads follow from it. One is the vacuity
+> family: a check that could not have failed must not report like one that was
+> evaluated and held, which is now explicit on the contracts result and is being
+> finished across the remaining surfaces. The other is two structural refactors
+> of archy's own code: the module its own tools rate as central and fragile,
+> and the two files that have grown large enough to hide things. New tools and
+> new output formats stay gated behind a usage signal.
+>
+> **The discipline does not relax because the project is active.** Thresholds
+> are pre-registered before a run, and any result, including another null, gets
+> published in [`docs/WHAT_DIDNT_WORK.md`](docs/WHAT_DIDNT_WORK.md) like the
+> five before it. Nothing archy ships today claims a local-model benefit;
+> `archy brief` (v0.46) shipped explicitly on judgment ahead of that
+> measurement rather than on one, and the measurement did not later rescue it.
 >
 > **What is not changing.** The original use case is still supported and still
 > works: layer governance in CI, blast radius and affected-tests for a frontier
-> agent, the MCP server. This is an adjacent focus, not a replacement, and
-> nothing is being removed or renamed to make room for it. Bugs still get fixed,
-> pull requests still get reviewed, and the `good first issue` tickets are still
-> deliberately left open.
+> agent, the MCP server. Nothing is being removed or renamed. Bugs still get
+> fixed, pull requests still get reviewed, and the `good first issue` tickets
+> are still deliberately left open.
 
 ## Read this first: I measured the premise, and it was wrong
 
@@ -68,9 +83,9 @@ So: the problem is real (I have watched a developer's own architecture rule get 
 
 That is the shape of the whole thing. **Layout is visible in a file tree. Direction, transitive reach and cycles are visible nowhere**, at any zoom level, in any single file. And a separate study found that once one of these lands it is *never repaired*: zero violations were resolved across the sampled corpus, and 2 of 14 repositories sat on broken contracts indefinitely. Rare and permanent, not rare and self-healing.
 
-**What that means for the roadmap: it is closed.** Feature work premised on "agents will wreck your architecture" went off the table when that premise was retracted. What survives is narrower and now has a number behind it: directional rules, transitive contracts and cycle detection, checked every session. That is a real job and archy does it, but four studies produced no evidence that *more* of it is worth building, and the honest reading of four headroom-limited results is that the next feature is not the missing piece.
+**What that means for what gets built.** Feature work premised on "agents will wreck your architecture" went off the table when that premise was retracted, and nothing since has put it back. What survives is narrower and has a number behind it: directional rules, transitive contracts and cycle detection, checked every session. That is a real job and archy does it. What the studies argue against is *more* of it: five of them produced no evidence that another feature is the missing piece, and the honest reading of headroom-limited results is that the next one will not be either.
 
-So archy is finished rather than abandoned. It is maintained, bugs get fixed, and contributions are welcome. There is no roadmap left to publish.
+So the roadmap that was closed in July stays closed, and being active again did not reopen it. Work here goes into the loop that survived rather than into the list that did not: making what archy already computes arrive where an agent will actually read it, and saying honestly what each answer does and does not cover. Bugs get fixed and contributions are welcome, as before.
 
 The full write-up, including the six measurement artifacts that nearly turned a failed study into a success story, is in [`docs/WHAT_DIDNT_WORK.md`](docs/WHAT_DIDNT_WORK.md). If you only read one thing here, read that.
 
@@ -636,7 +651,7 @@ uv run pytest              # the test now runs instead of being skipped
 
 ## Roadmap
 
-**This roadmap is closed. Nothing below is planned.** See the status note at the top of this page; [`docs/ROADMAP.md`](docs/ROADMAP.md) and [`docs/FUTURE.md`](docs/FUTURE.md) carry the same closure and the reasoning behind it.
+**This roadmap is closed. Nothing below is planned**, and the project being active again does not revive it: current work is the loop described in the status note at the top of this page, not this list. [`docs/ROADMAP.md`](docs/ROADMAP.md) and [`docs/FUTURE.md`](docs/FUTURE.md) carry the same closure and the reasoning behind it.
 
 Both phases of the index-and-install work shipped (Phase 1 install-DX in v0.25.0 / v0.26.0, Phase 2 persistent index + watcher in v0.27.0). What follows is kept as a record of what was considered and why, not as a plan. Several items rest on a premise that has since been retracted, so read [`docs/WHAT_DIDNT_WORK.md`](docs/WHAT_DIDNT_WORK.md) before picking one up. Anyone is welcome to.
 
